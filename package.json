@@ -1,0 +1,14 @@
+{
+  "name": "stockmarket",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Биржа фриланса с аукционами на понижение",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node server.mjs",
+    "check": "node --check server.mjs && node --check public/app.js",
+    "test": "node --test tests/api.test.mjs"
+  },
+  "engines": { "node": ">=20" }
+}
