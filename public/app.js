@@ -27,8 +27,11 @@ const storage = { get(key, fallback) { try { return JSON.parse(localStorage.getI
 const storedFavorites = storage.get('sm-favorites', []);
 const state = { user: null, orders: [], categories: [], view: 'all', category: 'Все', query: '', sort: 'new', favorites: new Set(Array.isArray(storedFavorites) ? storedFavorites : []), selectedId: null, authMode: 'login', afterAuth: null };
 let toastTimeout;
+const browserDemo = document.documentElement.dataset.mode === 'demo' || location.hostname.endsWith('.github.io');
+const demoApi = browserDemo ? import(new URL('./pages-api.mjs', document.currentScript.src)).then(module => module.createBrowserApi()) : null;
 function toast(message) { const el = $('#toast'); el.textContent = message; el.classList.add('show'); clearTimeout(toastTimeout); toastTimeout = setTimeout(() => el.classList.remove('show'), 4200); }
 async function api(path, data) {
+  if (demoApi) return (await demoApi)(path, data);
   let response;
   try { response = await fetch(`/api${path}`, data === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); }
   catch { throw new Error('Сервер недоступен. Проверь, что StockMarket запущен.'); }
@@ -211,6 +214,16 @@ async function refresh() {
 }
 async function init() {
   $('#year').textContent = new Date().getFullYear();
+  if (browserDemo) {
+    $('.local-badge').textContent = 'Браузерное демо';
+    $('.auth-note').textContent = 'Демо-аккаунты и проекты сохраняются только в этом браузере.';
+    if (!$('.demo-banner')) {
+      const banner = document.createElement('p');
+      banner.className = 'demo-banner';
+      banner.textContent = 'Демо-версия: аккаунты, заказы и ставки сохраняются только в этом браузере и не видны другим посетителям.';
+      $('.page-heading').after(banner);
+    }
+  }
   try {
     const [me, listing] = await Promise.all([api('/me'), api('/orders')]);
     state.user = me.user; state.orders = listing.orders; state.categories = listing.categories;
